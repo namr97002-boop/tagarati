@@ -83,7 +83,16 @@
 <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://apis.google.com/js/api.js"></script>
+<script>
+// تحميل Google API فقط عند الاتصال بالإنترنت
+if (navigator.onLine) {
+    const script = document.createElement('script');
+    script.src = 'https://apis.google.com/js/api.js';
+    script.onload = () => console.log('✅ Google API جاهز');
+    script.onerror = () => console.log('⚠️ Google API غير متاح (بدون نت)');
+    document.head.appendChild(script);
+}
+</script>
 <script>
 // ==================== رفع الأرشيف إلى درايف التاجر ====================
 let tokenClient;
