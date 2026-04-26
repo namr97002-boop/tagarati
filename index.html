@@ -669,6 +669,39 @@ document.addEventListener('keypress', resetSessionTimer);
 console.log('✅ نظام الأمان المتكامل يعمل بنجاح');
 </script>
     <style>
+    /* ==================== أيقونات احتياطية تعمل بدون إنترنت ==================== */
+i.fas, i.far, i.fal {
+    font-family: 'Tajawal', sans-serif;
+    font-style: normal;
+    display: inline-block;
+}
+.fa-bolt::before, [class*="fa-bolt"] { content: "⚡"; }
+.fa-shopping-cart::before, [class*="fa-shopping-cart"] { content: "🛒"; }
+.fa-clock::before, [class*="fa-clock"] { content: "⏰"; }
+.fa-truck::before, [class*="fa-truck"] { content: "🚚"; }
+.fa-sign-out-alt::before, [class*="fa-sign-out-alt"] { content: "🚪"; }
+.fa-check-circle::before, [class*="fa-check-circle"] { content: "✅"; }
+.fa-exclamation-circle::before, [class*="fa-exclamation-circle"] { content: "❗"; }
+.fa-store::before, [class*="fa-store"] { content: "🏪"; }
+.fa-shield-alt::before, [class*="fa-shield-alt"] { content: "🔒"; }
+.fa-phone::before, [class*="fa-phone"] { content: "📞"; }
+.fa-edit::before, [class*="fa-edit"] { content: "✏️"; }
+.fa-trash::before, [class*="fa-trash"] { content: "🗑️"; }
+.fa-save::before, [class*="fa-save"] { content: "💾"; }
+.fa-print::before, [class*="fa-print"] { content: "🖨️"; }
+.fa-plus::before, [class*="fa-plus"] { content: "➕"; }
+.fa-minus::before, [class*="fa-minus"] { content: "➖"; }
+.fa-times::before, [class*="fa-times"] { content: "❌"; }
+.fa-user-plus::before, [class*="fa-user-plus"] { content: "👤"; }
+.fa-cogs::before, [class*="fa-cogs"] { content: "⚙️"; }
+.fa-file-pdf::before, [class*="fa-file-pdf"] { content: "📑"; }
+.fa-chart-line::before, [class*="fa-chart-line"] { content: "📉"; }
+.fa-download::before, [class*="fa-download"] { content: "⬇️"; }
+.fa-upload::before, [class*="fa-upload"] { content: "📤"; }
+.fa-cloud-upload-alt::before, [class*="fa-cloud-upload-alt"] { content: "☁️⬆️"; }
+.fa-cloud-download-alt::before, [class*="fa-cloud-download-alt"] { content: "☁️⬇️"; }
+.fa-archive::before, [class*="fa-archive"] { content: "📦"; }
+.fa-user-edit::before, [class*="fa-user-edit"] { content: "✏️👤"; }
         /* ========== أنماط البوابة ========== */
         * {
             margin: 0;
@@ -6863,6 +6896,122 @@ if (typeof window.initMainSystem === 'function') {
         addYearEndButton();
     };
 }
+</script>
+<script>
+(function() {
+    // خريطة جميع الأيقونات المستخدمة في النظام
+    const iconMap = {
+        // أساسيات
+        'fa-bolt': '⚡',
+        'fa-shopping-cart': '🛒',
+        'fa-clock': '⏰',
+        'fa-truck': '🚚',
+        'fa-calendar': '📅',
+        'fa-money-bill': '💲',
+        'fa-trash': '🗑️',
+        'fa-save': '💾',
+        'fa-print': '🖨️',
+        'fa-check-circle': '✅',
+        'fa-times': '❌',
+        'fa-plus': '➕',
+        'fa-minus': '➖',
+        'fa-sign-out-alt': '🚪',
+        'fa-store': '🏪',
+        'fa-shield-alt': '🔒',
+        'fa-phone': '📞',
+        'fa-edit': '✏️',
+        'fa-user-plus': '👤',
+        
+        // فواتير ومعاملات
+        'fa-file-invoice': '📄',
+        'fa-box': '📦',
+        'fa-tags': '🏷️',
+        'fa-search': '🔍',
+        'fa-chart-bar': '📊',
+        'fa-chart-pie': '📈',
+        'fa-file-pdf': '📑',
+        'fa-download': '⬇️',
+        'fa-upload': '📤',
+        'fa-cogs': '⚙️',
+        'fa-info-circle': 'ℹ️',
+        'fa-envelope': '✉️',
+        'fa-archive': '📦',
+        'fa-folder-open': '📂',
+        'fa-calendar-check': '📅✅',
+        'fa-hand-holding-usd': '💰',
+        'fa-money-bill-wave': '💵',
+        'fa-undo-alt': '↩️',
+        'fa-exchange-alt': '🔄',
+        'fa-skull-crossbones': '⚠️',
+        
+        // إضافات مهمة
+        'fa-chart-line': '📈',
+        'fa-search-plus': '🔍',
+        'fa-cloud-download-alt': '☁️⬇️',
+        'fa-cloud-upload-alt': '☁️⬆️',
+        'fa-user-edit': '✏️👤',
+        'fa-exclamation-circle': '❗',
+        'fa-money-bill-wave': '💵'
+    };
+
+    let fixTimeout;
+
+    function fixIcons(root = document) {
+        for (const [className, emoji] of Object.entries(iconMap)) {
+            // استهداف عناصر i و span فقط لتجنب إتلاف العناصر الأخرى
+            const elements = root.querySelectorAll(`i.${className}, span.${className}, .${className}`);
+            elements.forEach(el => {
+                // التأكد من أن العنصر ليس SVG وأنه لم يتم إصلاحه مسبقاً
+                if (!el.dataset.fixedIcon && el.tagName !== 'svg' && el.tagName !== 'path') {
+                    // التحقق من أن العنصر لا يحتوي على محتوى معقد
+                    const hasOnlyText = el.childNodes.length === 0 || 
+                                       (el.childNodes.length === 1 && el.childNodes[0].nodeType === Node.TEXT_NODE);
+                    
+                    if (hasOnlyText) {
+                        el.innerHTML = emoji;
+                        el.dataset.fixedIcon = 'true';
+                        el.style.fontStyle = 'normal';
+                        el.style.fontFamily = 'inherit';
+                        el.style.display = 'inline-block';
+                    }
+                }
+            });
+        }
+    }
+
+    function scheduleFix() {
+        clearTimeout(fixTimeout);
+        fixTimeout = setTimeout(() => fixIcons(), 50);
+    }
+
+    // التشغيل الأولي
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => fixIcons());
+    } else {
+        fixIcons();
+    }
+
+    // مراقبة التغييرات بتقنية debounce للحفاظ على الأداء
+    const observer = new MutationObserver(scheduleFix);
+    
+    if (document.body) {
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    } else {
+        // في حال لم يكن body جاهزاً بعد
+        document.addEventListener('DOMContentLoaded', () => {
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        });
+    }
+
+    // طمأنة المطور بأن الكود يعمل
+    console.log('✅ نظام الأيقونات الاحتياطية - يعمل بكفاءة');
+})();
 </script>
 
 </body>
