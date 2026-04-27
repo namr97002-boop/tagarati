@@ -5118,17 +5118,9 @@ window.initMainSystem = async function() {
 console.log('✅ نظام مدير النظام - جاهز للعمل');
 </script>
 
-<!-- ==================== Service Worker ==================== -->
-<script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(r => console.log('✅ SW مسجل'))
-        .catch(e => console.log('⚠️ SW:', e.message));
-}
 </script>
+<!-- ==================== Service Worker ==================== -->
 
-<!-- ==================== زر تثبيت التطبيق ==================== -->
-<script>
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
@@ -5442,15 +5434,6 @@ window.exportAdvancedStatementToPDF = async function() {
     document.body.removeChild(tempDiv);
 };
 
-// 4. إصلاح مشكلة Service Worker (منع الخطأ)
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for(let registration of registrations) {
-            registration.unregister();
-            console.log('✅ تم إلغاء تسجيل Service Worker القديم');
-        }
-    });
-}
 
 console.log('✅ جميع دوال PDF تم تفعيلها بنجاح');
 </script>
