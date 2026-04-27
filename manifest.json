@@ -1,13 +1,13 @@
 {
-  "name": "محلات سليمان الفرزعي للتجارة العامة",
+  "name": "محلات للتجارة العامة",
   "short_name": "تجارتي",
   "description": "نظام إدارة متجر ذكي يعمل بدون إنترنت",
   "theme_color": "#0a0a12",
   "background_color": "#0a0a12",
   "display": "standalone",
   "orientation": "portrait",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "icons": [
     {
       "src": "https://i.postimg.cc/9QLJBVcJ/1777228627401.png",
