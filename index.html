@@ -80,8 +80,7 @@
     </style>
 </head>
 <body>
-</body>
-</html>
+
     
     <!-- ==================== مكتبات PDF ==================== -->
 
@@ -93,6 +92,8 @@
 <script src="html2canvas.min.js"></script>
 <script src="jspdf.umd.min.js"></script>
 <script src="https://apis.google.com/js/api.js"></script>
+<script>
+
 <script>
 // ==================== رفع الأرشيف إلى درايف التاجر ====================
 let tokenClient;
@@ -5026,9 +5027,8 @@ if (savedName) {
         }
     }
     window.toggleFullscreen = toggleFullscreen;
-
-<!-- ==================== مستمعات الأحداث العامة ==================== -->
-<script>
+    <script>
+// ==================== مستمعات الأحداث العامة ====================
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
@@ -5036,7 +5036,6 @@ document.addEventListener('keydown', (e) => {
     }
     if (e.ctrlKey && e.key === 'f') {
         e.preventDefault();
-        searchCustomerInvoices();
     }
     if (e.ctrlKey && e.key === 'p') {
         e.preventDefault();
@@ -5116,10 +5115,8 @@ window.initMainSystem = async function() {
 };
 
 console.log('✅ نظام مدير النظام - جاهز للعمل');
-</script>
 
-</script>
-<!-- ==================== Service Worker ==================== -->
+// ==================== Service Worker ====================
 
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -5138,9 +5135,9 @@ window.addEventListener('beforeinstallprompt', (e) => {
     setTimeout(() => { if (btn.parentNode) btn.remove(); }, 15000);
 });
 window.addEventListener('appinstalled', () => { console.log('✅ تم التثبيت'); });
-</script>
 
-<!-- ==================== تحسينات ==================== -->
+<script>
+
 <script>
 document.addEventListener('focusin', () => {
     const el = document.activeElement;
@@ -6783,8 +6780,7 @@ function exportSystemGuidePDF() {
         ${storeName} - جميع الحقوق محفوظة © ${now.getFullYear()}<br>
         برمجة وتطوير: نصر العامري
     </div>
-</body>
-</html>`;
+`;
     
     const win = window.open('', '_blank', 'width=800,height=600,menubar=yes,toolbar=yes');
     if (win) {
