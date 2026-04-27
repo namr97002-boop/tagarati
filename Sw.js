@@ -1,37 +1,35 @@
-const CACHE_NAME = "tagarati-v5-offline"; // تم التحديث للإصدار الخامس لمسح الكاش القديم وتفعيل النظام أوفلاين
+const CACHE_NAME = "tagarati-v5-offline";
 
+// الروابط التي سيتم حفظها للعمل بدون إنترنت
 const PRECACHE_URLS = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./localforage.min.js",   // تم إضافة المكتبة لتعمل بدون إنترنت
-  "./html2canvas.min.js",   // تم إضافة المكتبة لتعمل بدون إنترنت
-  "./jspdf.umd.min.js"      // تم إضافة المكتبة لتعمل بدون إنترنت
+  "./localforage.min.js",
+  "./html2canvas.min.js",
+  "./jspdf.umd.min.js",
+  "https://fonts.gstatic.com/s/tajawal/v12/Iura6YBj_oCad4k1nzSBC45I.woff2" // حفظ الخط أيضاً
 ];
 
-// مرحلة التثبيت: حفظ الملفات في ذاكرة الهاتف
+// 1. مرحلة التثبيت: حفظ الملفات في ذاكرة الهاتف
 self.addEventListener("install", (event) => {
-  console.log("[SW] تثبيت الإصدار الجديد:", CACHE_NAME);
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // استخدام allSettled لضمان استمرار التثبيت حتى لو فقد أحد الملفات
       return Promise.allSettled(
         PRECACHE_URLS.map(url => cache.add(url))
-      );
-    }).catch(err => console.error("[SW] خطأ في التخزين المسبق:", err))
+      ).then(() => console.log("✅ تم حفظ جميع الملفات في الكاش"));
+    })
   );
 });
 
-// مرحلة التفعيل: حذف الكاش القديم (v4 وما قبله)
+// 2. مرحلة التفعيل: تنظيف الكاش القديم
 self.addEventListener("activate", (event) => {
-  console.log("[SW] تفعيل الإصدار:", CACHE_NAME);
   event.waitUntil(
     caches.keys().then((names) => {
       return Promise.all(
         names.map((name) => {
           if (name !== CACHE_NAME) {
-            console.log("[SW] حذف الكاش القديم:", name);
             return caches.delete(name);
           }
         })
@@ -40,31 +38,32 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// مرحلة جلب البيانات: البحث في الكاش أولاً قبل طلب الإنترنت
+// 3. مرحلة جلب البيانات: الكاش أولاً (هذا ما يحل مشكلة الديناصور)
 self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
-  
-  // التعامل فقط مع ملفات موقعنا
-  if (url.origin !== self.location.origin) return;
+  // لا نقوم بتخزين طلبات POST أو الروابط الخارجية غير المعرفة
+  if (event.request.method !== "GET") return;
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const networkFetch = fetch(event.request).then((response) => {
-        // تحديث الكاش بالملفات الجديدة إذا كان هناك إنترنت
-        if (response && response.status === 200 && event.request.method === "GET") {
+    caches.match(event.request).then((cachedResponse) => {
+      // إذا وجد الملف في الكاش، نعرضه فوراً
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      // إذا لم يوجد، نطلبه من الشبكة ونحفظ نسخة منه للمرة القادمة
+      return fetch(event.request).then((response) => {
+        if (response && response.status === 200) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, clone);
           });
         }
         return response;
-      }).catch(() => cached);
-
-      // العودة للملف المخزن إذا لم يتوفر اتصال
-      return cached || networkFetch;
-    }).catch(() => {
-      // في حال فشل كل شيء، العودة للصفحة الرئيسية
-      return caches.match("./index.html");
+      }).catch(() => {
+        // إذا فشل النت ولا يوجد كاش، نفتح الصفحة الرئيسية
+        if (event.request.mode === 'navigate') {
+          return caches.match("./index.html");
+        }
+      });
     })
   );
 });
