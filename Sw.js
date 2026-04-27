@@ -1,6 +1,6 @@
 const CACHE_NAME = "tagarati-v5-offline";
 
-// الروابط التي سيتم حفظها للعمل بدون إنترنت
+// الملفات الأساسية التي سيتم حفظها للعمل بدون إنترنت
 const PRECACHE_URLS = [
   "./",
   "./index.html",
@@ -8,22 +8,28 @@ const PRECACHE_URLS = [
   "./localforage.min.js",
   "./html2canvas.min.js",
   "./jspdf.umd.min.js",
-  "https://fonts.gstatic.com/s/tajawal/v12/Iura6YBj_oCad4k1nzSBC45I.woff2" // حفظ الخط أيضاً
+
+  // الخط المحلي (مهم جدًا يكون داخل المشروع)
+  "./fonts/Tajawal-Regular.woff2",
+  "./fonts/Tajawal-Bold.woff2"
 ];
 
-// 1. مرحلة التثبيت: حفظ الملفات في ذاكرة الهاتف
+// ===================== 1. التثبيت =====================
 self.addEventListener("install", (event) => {
   self.skipWaiting();
+
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return Promise.allSettled(
-        PRECACHE_URLS.map(url => cache.add(url))
-      ).then(() => console.log("✅ تم حفظ جميع الملفات في الكاش"));
+      return cache.addAll(
+        PRECACHE_URLS.map((url) => new Request(url, { cache: "reload" }))
+      );
+    }).then(() => {
+      console.log("✅ تم حفظ جميع الملفات في الكاش");
     })
   );
 });
 
-// 2. مرحلة التفعيل: تنظيف الكاش القديم
+// ===================== 2. التفعيل =====================
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((names) => {
@@ -38,29 +44,31 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// 3. مرحلة جلب البيانات: الكاش أولاً (هذا ما يحل مشكلة الديناصور)
+// ===================== 3. الجلب (Offline First) =====================
 self.addEventListener("fetch", (event) => {
-  // لا نقوم بتخزين طلبات POST أو الروابط الخارجية غير المعرفة
   if (event.request.method !== "GET") return;
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      // إذا وجد الملف في الكاش، نعرضه فوراً
+      // 1. إذا موجود في الكاش
       if (cachedResponse) {
         return cachedResponse;
       }
-      // إذا لم يوجد، نطلبه من الشبكة ونحفظ نسخة منه للمرة القادمة
+
+      // 2. إذا غير موجود نجيب من النت ونخزنه
       return fetch(event.request).then((response) => {
-        if (response && response.status === 200) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, clone);
-          });
-        }
+        if (!response || response.status !== 200) return response;
+
+        const clone = response.clone();
+
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, clone);
+        });
+
         return response;
       }).catch(() => {
-        // إذا فشل النت ولا يوجد كاش، نفتح الصفحة الرئيسية
-        if (event.request.mode === 'navigate') {
+        // 3. إذا ما في نت نفتح الصفحة الرئيسية
+        if (event.request.mode === "navigate") {
           return caches.match("./index.html");
         }
       });
