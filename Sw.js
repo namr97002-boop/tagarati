@@ -1,77 +1,93 @@
-const CACHE_NAME = "tagarati-v5-offline";
+// ==================== SW احترافي v3 ====================
+const CACHE_NAME = 'sulaiman-system-v3';
 
-// الملفات الأساسية التي سيتم حفظها للعمل بدون إنترنت
-const PRECACHE_URLS = [
-  "./",
-  "./index.html",
-  "./manifest.json",
-  "./localforage.min.js",
-  "./html2canvas.min.js",
-  "./jspdf.umd.min.js",
-
-  // الخط المحلي (مهم جدًا يكون داخل المشروع)
-  "./fonts/Tajawal-Regular.woff2",
-  "./fonts/Tajawal-Bold.woff2"
+// الملفات الأساسية (محلية فقط)
+const STATIC_FILES = [
+    '/index.html',
+    '/manifest.json'
 ];
 
-// ===================== 1. التثبيت =====================
-self.addEventListener("install", (event) => {
-  self.skipWaiting();
+// ==================== INSTALL ====================
+self.addEventListener('install', (event) => {
+    console.log('🚀 SW: تثبيت...');
 
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(
-        PRECACHE_URLS.map((url) => new Request(url, { cache: "reload" }))
-      );
-    }).then(() => {
-      console.log("✅ تم حفظ جميع الملفات في الكاش");
-    })
-  );
+    event.waitUntil(
+        caches.open(CACHE_NAME).then(async (cache) => {
+            for (const file of STATIC_FILES) {
+                try {
+                    await cache.add(file);
+                    console.log('✅ تم تخزين:', file);
+                } catch (err) {
+                    console.warn('❌ فشل تخزين:', file);
+                }
+            }
+        }).then(() => self.skipWaiting())
+    );
 });
 
-// ===================== 2. التفعيل =====================
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((names) => {
-      return Promise.all(
-        names.map((name) => {
-          if (name !== CACHE_NAME) {
-            return caches.delete(name);
-          }
+// ==================== ACTIVATE ====================
+self.addEventListener('activate', (event) => {
+    console.log('⚡ SW: تفعيل...');
+
+    event.waitUntil(
+        caches.keys().then((names) => {
+            return Promise.all(
+                names.map((name) => {
+                    if (name !== CACHE_NAME) {
+                        console.log('🗑️ حذف كاش قديم:', name);
+                        return caches.delete(name);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim())
+    );
+});
+
+// ==================== FETCH ====================
+self.addEventListener('fetch', (event) => {
+    const request = event.request;
+
+    // ====================
+    // 1. الصفحات (HTML)
+    // Cache First
+    // ====================
+    if (request.headers.get('accept')?.includes('text/html')) {
+        event.respondWith(
+            caches.match(request).then((cached) => {
+                return cached || fetch(request)
+                    .then((response) => {
+                        return caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(request, response.clone());
+                            return response;
+                        });
+                    })
+                    .catch(() => {
+                        return caches.match('/index.html');
+                    });
+            })
+        );
+        return;
+    }
+
+    // ====================
+    // 2. باقي الملفات (JS, CSS, صور, خطوط)
+    // Stale While Revalidate
+    // ====================
+    event.respondWith(
+        caches.match(request).then((cached) => {
+
+            const fetchPromise = fetch(request)
+                .then((networkResponse) => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(request, networkResponse.clone());
+                        });
+                    }
+                    return networkResponse;
+                })
+                .catch(() => cached);
+
+            return cached || fetchPromise;
         })
-      );
-    }).then(() => self.clients.claim())
-  );
-});
-
-// ===================== 3. الجلب (Offline First) =====================
-self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      // 1. إذا موجود في الكاش
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      // 2. إذا غير موجود نجيب من النت ونخزنه
-      return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200) return response;
-
-        const clone = response.clone();
-
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, clone);
-        });
-
-        return response;
-      }).catch(() => {
-        // 3. إذا ما في نت نفتح الصفحة الرئيسية
-        if (event.request.mode === "navigate") {
-          return caches.match("./index.html");
-        }
-      });
-    })
-  );
+    );
 });
