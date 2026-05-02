@@ -2756,15 +2756,23 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzTbi9mJCHSdWGGqnhqg
                 }
             }
             
-            // تحديث رصيد العميل/المورد
-            if (activeMode === 'credit') {
-                const contact = await contactsStore.getItem(finalContactId);
-                if (contact) {
-                    if (activeType === 'sale' || activeType === 'purchase_return') contact.balance += total;
-                    else contact.balance -= total;
-                    await contactsStore.setItem(finalContactId, contact);
-                }
-            }
+// تحديث رصيد العميل/المورد
+const contact = await contactsStore.getItem(finalContactId);
+if (contact) {
+    if (activeType === 'sale') {
+        if (activeMode === 'credit') contact.balance += total;
+    } else if (activeType === 'sale_return') {
+        contact.balance -= total;
+    } else if (activeType === 'purchase') {
+        if (activeMode === 'credit') contact.balance -= total;
+    } else if (activeType === 'purchase_return') {
+        contact.balance += total;
+    }
+    await contactsStore.setItem(finalContactId, contact);
+    const conIdx = cachedContacts.findIndex(c => c.id === finalContactId);
+    if (conIdx !== -1) cachedContacts[conIdx] = contact;
+    else cachedContacts.push(contact);
+}
             
             lastSavedInvoice = {
                 id: invoiceId,
